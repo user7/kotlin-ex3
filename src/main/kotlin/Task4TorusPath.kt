@@ -4,7 +4,6 @@ import java.util.*
 var inputFile = "input.txt"
 var outputFile = "output.txt"
 fun main(args: Array<String>) {
-    //doTorus()
     testToruses()
 }
 
@@ -21,6 +20,20 @@ class Torus(
     val finish: Pt
 ) {
     private val data = Array(size.x * size.y) { Cell() }
+
+//    private val next = Array(4) { Array(size.x * size.y) { 0 }}
+//
+//    init {
+//        for (x in 0 until size.x) {
+//            for (y in 0 until size.y) {
+//
+//            }
+//        }
+//    }
+//    private val nextS = Array()
+//    private val nextS = Array()
+//    fun at(abs: Int) = data[abs]
+
     fun at(at: Pt) = data[at.x * size.y + at.y]
 }
 
@@ -43,7 +56,7 @@ fun findPath(t: Torus): String {
     var wave = listOf(t.start)
 
     // step directions
-    val dirCode = arrayOf('N', 'E', 'S', 'W')
+    val dirCode = arrayOf('S', 'E', 'N', 'W')
     val dx = arrayOf(0, 1, 0, -1)
     val dy = arrayOf(1, 0, -1, 0)
 
@@ -75,8 +88,7 @@ fun findPath(t: Torus): String {
     return "-1"
 }
 
-fun String.splitIntsChunk(n: Int) = this.split(" ").filter { it != "" }.map { it.toInt() }.chunked(n)
-fun String.toPoints() = this.splitIntsChunk(2).map { Pt(it[0], it[1]) }
+fun String.toPoints() = this.splitIntsCh(2).map { Pt(it[0], it[1]) }
 
 fun testInOut(name: String, input: String, expected: String) {
     inputFile = "in.txt"
@@ -104,7 +116,7 @@ fun testToruses() {
             |0 0 0
             |0 0 0
         """,
-        expected = "N",
+        expected = "S",
     )
 
     testInOut(
@@ -115,7 +127,7 @@ fun testToruses() {
             |0 0 0
             |0 0 0
         """,
-        expected = "S",
+        expected = "N",
     )
 
     testInOut(
@@ -159,7 +171,7 @@ fun testToruses() {
             |0 0 0
             |0 0 0
         """,
-        expected = "ES",
+        expected = "EN",
     )
 
     testInOut(
@@ -187,6 +199,51 @@ fun testToruses() {
             |0 1 0 0 0 1 0
             |0 0 0 1 0 0 1
         """,
-        expected = "NEENEENE",
+        expected = "SEESEESE",
+    )
+
+    testInOut(
+        name = "yandex big",
+        input = """
+            |10 10
+            |1 0 8 8
+            |1 0 1 0 0 0 0 0 0 1
+            |0 0 0 0 1 0 0 1 0 0
+            |0 0 0 0 0 0 0 0 0 0
+            |0 0 0 1 0 0 1 1 0 0
+            |0 0 1 0 0 0 0 0 0 0
+            |1 0 0 0 0 0 0 0 0 1
+            |1 0 0 0 0 0 0 0 0 0
+            |0 1 1 1 1 1 1 1 1 0
+            |0 0 0 0 0 0 0 0 0 1
+            |1 1 1 1 1 1 1 1 1 1
+        """,
+        expected = "SSSWWSSESESEEEEEEEE"
+    )
+
+    testInOut(
+        name = "yandex blocked",
+        input = """
+            |4 4
+            |0 3 2 1
+            |1 1 1 0
+            |1 1 1 1
+            |1 0 1 1
+            |1 1 1 1
+        """,
+        expected = "-1"
+    )
+
+    testInOut(
+        name = "chain blockage",
+        input = """
+            |4 4
+            |0 0 3 3
+            |0 0 1 1
+            |0 1 0 1
+            |1 0 0 1
+            |1 1 0 0
+        """,
+        expected = "-1"
     )
 }
