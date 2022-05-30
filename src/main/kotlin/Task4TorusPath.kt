@@ -1,102 +1,117 @@
 import java.io.File
+import java.lang.StringBuilder
 import java.util.*
+import kotlin.collections.ArrayList
 
-var inputFile = "input.txt"
-var outputFile = "output.txt"
 fun main(args: Array<String>) {
-    testToruses()
+    torusTests()
+    doTorus()
 }
 
-data class Pt(val x: Int, val y: Int)
-
-class Cell {
-    var prev: Cell? = null
-    var code: Char = ' '
-}
+val S = 0
+val E = 1
+val N = 2
+val W = 3
+val dirCode = arrayOf('S', 'E', 'N', 'W')
 
 class Torus(
-    val size: Pt,
-    val start: Pt,
-    val finish: Pt
+    sizey: Int,
+    val sizex: Int,
+    starty: Int,
+    startx: Int,
+    finishy: Int,
+    finishx: Int
 ) {
-    private val data = Array(size.x * size.y) { Cell() }
+    fun posFromCoords(y: Int, x: Int) = sizex * y + x
+    val start = posFromCoords(starty, startx)
+    val finish = posFromCoords(finishy, finishx)
+    val linSize = sizex * sizey
+    val dirStep = arrayOf(sizex, 1, -sizex, -1)
 
-//    private val next = Array(4) { Array(size.x * size.y) { 0 }}
-//
+    // data
+    // val next = Array(4) { IntArray(linSize) { -1 } }
+    fun nextPos(dir: Int, pos: Int) =
+        when (dir) {
+            N -> if (pos >= sizex) pos - sizex else pos - sizex + linSize
+            S -> if (pos < linSize - sizex) pos + sizex else pos + sizex - linSize
+            E -> if (pos % sizex != sizex - 1) pos + 1 else pos + 1 - sizex
+            W -> if (pos % sizex != 0) pos - 1 else pos - 1 + sizex
+            else -> TODO()
+        }
+
+    val isBlocked = BitSet(linSize)
+    val revPos = IntArray(linSize) { -1 }
+    val revCode = CharArray(linSize) { ' ' }
+
 //    init {
-//        for (x in 0 until size.x) {
-//            for (y in 0 until size.y) {
-//
-//            }
+//        // link first and last rows
+//        val botBase = (sizey - 1) * sizex
+//        for (x in 0 until sizex) {
+//            next[N][x] = botBase + x
+//            next[S][botBase + x] = x
+//        }
+//        // link first and last columns
+//        for (y in 0 until sizey) {
+//            val base = y * sizex
+//            val baseEnd = base + sizex - 1
+//            next[W][base] = baseEnd
+//            next[E][baseEnd] = base
 //        }
 //    }
-//    private val nextS = Array()
-//    private val nextS = Array()
-//    fun at(abs: Int) = data[abs]
-
-    fun at(at: Pt) = data[at.x * size.y + at.y]
 }
 
 fun doTorus() {
-    val s = Scanner(File(inputFile))
-    fun readPt() = s.nextInt().let { Pt(s.nextInt(), it) }
-    val t = Torus(readPt(), readPt(), readPt())
-    for (y in 0 until t.size.y)
-        for (x in 0 until t.size.x)
-            if (s.nextInt() == 1)
-                t.at(Pt(x, y)).code = 'x'
-    File(outputFile).writeText(findPath(t))
+    val s = Scanner(File("input.txt"))
+    val t = Torus(s.nextInt(), s.nextInt(), s.nextInt(), s.nextInt(), s.nextInt(), s.nextInt())
+    for (pos in 0 until t.linSize) {
+        if (s.nextInt() == 1)
+            t.isBlocked.set(pos)
+    }
+    File("output.txt").writeText(findPath(t))
 }
 
 fun findPath(t: Torus): String {
     if (t.start == t.finish)
         return ""
-    t.at(t.start).code = 'x'
-    t.at(t.finish).code = ' '
-    var wave = listOf(t.start)
-
-    // step directions
-    val dirCode = arrayOf('S', 'E', 'N', 'W')
-    val dx = arrayOf(0, 1, 0, -1)
-    val dy = arrayOf(1, 0, -1, 0)
-
+    t.isBlocked.set(t.start)
+    t.isBlocked.set(t.finish, false)
+    var wave = arrayListOf(t.start)
+    var wave2 = ArrayList<Int>()
     while (wave.isNotEmpty()) {
-        val wave2 = LinkedList<Pt>()
-        for (pt in wave) {
-            val cell = t.at(pt)
+        for (pos in wave) {
             for (dir in dirCode.indices) {
-                val pt2 = Pt((pt.x + dx[dir] + t.size.x) % t.size.x, (pt.y + dy[dir] + t.size.y) % t.size.y)
-                val cell2 = t.at(pt2)
-                if (cell2.code != ' ')
+                val pos2 = t.nextPos(dir, pos)
+                if (t.isBlocked.get(pos2))
                     continue
-                cell2.code = dirCode[dir]
-                cell2.prev = cell
-                if (pt2 == t.finish) {
-                    var cur = cell2
-                    var path = ""
+                t.isBlocked.set(pos2)
+                t.revCode[pos2] = dirCode[dir]
+                t.revPos[pos2] = pos
+                if (pos2 == t.finish) {
+                    val path = StringBuilder()
+                    var cur = pos2
                     while (true) {
-                        val next = cur.prev ?: return path
-                        path = cur.code + path
-                        cur = next
+                        if (t.revPos[cur] == -1)
+                            return path.toString().reversed()
+                        path.append(t.revCode[cur])
+                        cur = t.revPos[cur]
                     }
                 }
-                wave2.add(pt2)
+                wave2.add(pos2)
             }
         }
+        val tmp = wave
         wave = wave2
+        wave2 = tmp
+        wave2.clear()
     }
     return "-1"
 }
 
-fun String.toPoints() = this.splitIntsCh(2).map { Pt(it[0], it[1]) }
-
 fun testInOut(name: String, input: String, expected: String) {
-    inputFile = "in.txt"
-    outputFile = "out.txt"
     val exp = expected.trimMargin()
-    File(inputFile).writeText(input.trimMargin())
+    File("input.txt").writeText(input.trimMargin())
     doTorus()
-    val got = File(outputFile).readText()
+    val got = File("output.txt").readText()
     if (exp != got) {
         val flatExp = exp.replace("\n", " ")
         val flatGot = got.replace("\n", " ")
@@ -106,7 +121,7 @@ fun testInOut(name: String, input: String, expected: String) {
     }
 }
 
-fun testToruses() {
+fun torusTests() {
 
     testInOut(
         name = "3x3 neighbor",
@@ -160,7 +175,7 @@ fun testToruses() {
             |0 0 0
             |0 0 0
         """,
-        expected = "NE",
+        expected = "SE",
     )
 
     testInOut(
