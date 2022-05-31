@@ -4,8 +4,8 @@ import java.util.*
 import kotlin.collections.ArrayList
 
 fun main() {
-    torusTests()
-//    doTorus()
+//    torusTests()
+    doTorus()
 }
 
 const val S = 0
@@ -253,15 +253,15 @@ fun torusTests() {
         )
     }
 
-    for (n in 101..1001 step 100) {
-        testInOut(
-            name = "${n}x$n impossible generated",
-            input = "$n $n 0 0 1 1"
-                    + " 0 1 0" + " 0".repeat(n - 3)
-                    + " 1 0 1" + " 0".repeat(n - 3)
-                    + " 0 1 0" + " 0".repeat(n - 3)
-                    + " 0".repeat(n * n - 3 * n),
-            expected = "-1"
-        )
-    }
+//    for (n in 101..1001 step 100) {
+//        testInOut(
+//            name = "${n}x$n impossible generated",
+//            input = "$n $n 0 0 1 1"
+//                    + " 0 1 0" + " 0".repeat(n - 3)
+//                    + " 1 0 1" + " 0".repeat(n - 3)
+//                    + " 0 1 0" + " 0".repeat(n - 3)
+//                    + " 0".repeat(n * n - 3 * n),
+//            expected = "-1"
+//        )
+//    }
 }
