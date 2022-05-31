@@ -1,10 +1,17 @@
 class Task4_Test(val runner: () -> Unit) {
 
+    fun testAll() {
+        val start = System.currentTimeMillis()
+        testAllAux()
+        val time = (System.currentTimeMillis() - start) / 1000f
+        println("done, total time: $time")
+    }
+
     fun test(name: String, input: String, expected: String) {
         InOutTestRunner.run(name, input, expected, runner)
     }
 
-    fun testAll() {
+    fun testAllAux() {
         test(
             name = "3x3 neighbor",
             input = """

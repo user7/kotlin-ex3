@@ -1,5 +1,4 @@
 import java.io.File
-import java.lang.Integer.min
 import java.util.*
 
 class Task4TorusAstarPQ(
