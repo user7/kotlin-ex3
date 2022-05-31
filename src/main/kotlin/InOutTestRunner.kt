@@ -8,7 +8,7 @@ class InOutTestRunner {
             val start = System.currentTimeMillis()
             runner()
             val time = (System.currentTimeMillis() - start) / 1000f
-            val got = File("output.txt").readText()
+            val got = File("output.txt").readText().trim()
             if (exp != got) {
                 fun flattenShorten(s: String) = s.replace("\n", " ").let {
                     if (it.length <= 30) it else it.substring(0, 15) + "..." + it.takeLast(15)
