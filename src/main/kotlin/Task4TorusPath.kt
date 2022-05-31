@@ -1,17 +1,17 @@
 import java.io.File
-import java.lang.StringBuilder
+import java.lang.System.currentTimeMillis
 import java.util.*
 import kotlin.collections.ArrayList
 
-fun main(args: Array<String>) {
+fun main() {
     torusTests()
-    doTorus()
+//    doTorus()
 }
 
-val S = 0
-val E = 1
-val N = 2
-val W = 3
+const val S = 0
+const val E = 1
+const val N = 2
+const val W = 3
 val dirCode = arrayOf('S', 'E', 'N', 'W')
 
 class Torus(
@@ -26,10 +26,7 @@ class Torus(
     val start = posFromCoords(starty, startx)
     val finish = posFromCoords(finishy, finishx)
     val linSize = sizex * sizey
-    val dirStep = arrayOf(sizex, 1, -sizex, -1)
 
-    // data
-    // val next = Array(4) { IntArray(linSize) { -1 } }
     fun nextPos(dir: Int, pos: Int) =
         when (dir) {
             N -> if (pos >= sizex) pos - sizex else pos - sizex + linSize
@@ -42,22 +39,6 @@ class Torus(
     val isBlocked = BitSet(linSize)
     val revPos = IntArray(linSize) { -1 }
     val revCode = CharArray(linSize) { ' ' }
-
-//    init {
-//        // link first and last rows
-//        val botBase = (sizey - 1) * sizex
-//        for (x in 0 until sizex) {
-//            next[N][x] = botBase + x
-//            next[S][botBase + x] = x
-//        }
-//        // link first and last columns
-//        for (y in 0 until sizey) {
-//            val base = y * sizex
-//            val baseEnd = base + sizex - 1
-//            next[W][base] = baseEnd
-//            next[E][baseEnd] = base
-//        }
-//    }
 }
 
 fun doTorus() {
@@ -110,14 +91,16 @@ fun findPath(t: Torus): String {
 fun testInOut(name: String, input: String, expected: String) {
     val exp = expected.trimMargin()
     File("input.txt").writeText(input.trimMargin())
+    val start = currentTimeMillis()
     doTorus()
+    val time = (currentTimeMillis() - start) / 1000f
     val got = File("output.txt").readText()
     if (exp != got) {
         val flatExp = exp.replace("\n", " ")
         val flatGot = got.replace("\n", " ")
-        println("failed $name: expected '$flatExp', got '$flatGot'")
+        println("failed $name: expected '$flatExp', got '$flatGot' time=$time")
     } else {
-        println("ok $name")
+        println("ok $name time=$time")
     }
 }
 
@@ -261,4 +244,24 @@ fun torusTests() {
         """,
         expected = "-1"
     )
+
+    for (n in 101..1001 step 100) {
+        testInOut(
+            name = "${n}x$n generated",
+            input = "$n $n 0 0 ${n / 2} ${n / 2}" + " 0".repeat(n * n),
+            expected = "S".repeat(n / 2) + "E".repeat(n / 2)
+        )
+    }
+
+    for (n in 101..1001 step 100) {
+        testInOut(
+            name = "${n}x$n impossible generated",
+            input = "$n $n 0 0 1 1"
+                    + " 0 1 0" + " 0".repeat(n - 3)
+                    + " 1 0 1" + " 0".repeat(n - 3)
+                    + " 0 1 0" + " 0".repeat(n - 3)
+                    + " 0".repeat(n * n - 3 * n),
+            expected = "-1"
+        )
+    }
 }
