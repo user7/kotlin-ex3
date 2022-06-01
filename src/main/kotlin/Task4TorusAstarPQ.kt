@@ -9,13 +9,13 @@ class Task4TorusAstarPQ(
     val finishy: Int,
     val finishx: Int
 ) {
-    fun packXY(x: Int, y: Int) = x.shl(16).or(y)
+    inline fun packXY(x: Int, y: Int) = x.shl(16).or(y)
     val start = packXY(startx, starty)
     val finish = packXY(finishx, finishy)
 
-    fun distCoordOrd(c1: Int, c2: Int, m: Int) = kotlin.math.min(c2 - c1, c1 + m - c2)
-    fun distCoord(c1: Int, c2: Int, m: Int) = if (c1 < c2) distCoordOrd(c1, c2, m) else distCoordOrd(c2, c1, m)
-    fun dist(x1: Int, y1: Int, x2: Int, y2: Int) = distCoord(x1, x2, sizex) + distCoord(y1, y2, sizey)
+    inline fun distCoordOrd(c1: Int, c2: Int, m: Int) = kotlin.math.min(c2 - c1, c1 + m - c2)
+    inline fun distCoord(c1: Int, c2: Int, m: Int) = if (c1 < c2) distCoordOrd(c1, c2, m) else distCoordOrd(c2, c1, m)
+    inline fun dist(x1: Int, y1: Int, x2: Int, y2: Int) = distCoord(x1, x2, sizex) + distCoord(y1, y2, sizey)
 
     val que = PriorityQueue<Long>()
 
@@ -38,7 +38,7 @@ class Task4TorusAstarPQ(
     val dirName = listOf('E', 'S', 'N', 'W')
     val maxX = (sizex - 1).shl(16)
     val maxY = sizey - 1
-    fun step(dir: Int, pos: Int): Int =
+    inline fun step(dir: Int, pos: Int): Int =
         when (dir) {
             // 0=E, x++
             0 -> if (pos < maxX) pos + 0x10000 else pos.and(0xFFFF)
@@ -63,20 +63,22 @@ class Task4TorusAstarPQ(
     }
 
     val data = Array(sizex) { IntArray(sizey * 3) { -1 } }
+
     // node: 8 bytes
     //  g:       Int
     //  h:       Short
     //  prevdir: Byte
-    fun posx(pos: Int) = pos.ushr(16)
-    fun posy(pos: Int) = pos.and(0xFFFF)
+    inline fun posx(pos: Int) = pos.ushr(16)
+    inline fun posy(pos: Int) = pos.and(0xFFFF)
 
-    fun setG(pos: Int, g: Int) { data[posx(pos)][posy(pos) * 3] = g }
-    fun getG(pos: Int)         = data[posx(pos)][posy(pos) * 3]
+    inline fun setG(pos: Int, g: Int) { data[posx(pos)][posy(pos) * 3] = g   }
+    inline fun getG(pos: Int) = data[posx(pos)][posy(pos) * 3]
 
-    fun setDir(pos: Int, dir: Int) { data[posx(pos)][posy(pos) * 3 + 2] = dir }
-    fun getDir(pos: Int) = data[posx(pos)][posy(pos) * 3 + 2]
+    inline fun setDir(pos: Int, dir: Int) { data[posx(pos)][posy(pos) * 3 + 2] = dir }
 
-    fun getH(pos: Int): Int {
+    inline fun getDir(pos: Int) = data[posx(pos)][posy(pos) * 3 + 2]
+
+    inline fun getH(pos: Int): Int {
         val x = posx(pos)
         val y = posy(pos)
         val yi = y * 3 + 1
@@ -88,7 +90,7 @@ class Task4TorusAstarPQ(
         return h
     }
 
-    fun getF(pos: Int): Int = getG(pos) + getH(pos)
+    inline fun getF(pos: Int): Int = getG(pos) + getH(pos)
 
     fun findPath(): String {
         if (start == finish)
