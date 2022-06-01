@@ -13,7 +13,7 @@ class Task4_Test(val runner: () -> Unit) {
 
     fun testAllAux() {
         test(
-            name = "3x3 neighbor",
+            name = "3x3 neighbor S",
             input = """
         |3 3 0 0 1 0
         |0 0 0
@@ -24,7 +24,7 @@ class Task4_Test(val runner: () -> Unit) {
         )
 
         test(
-            name = "3x3 neighbor",
+            name = "3x3 neighbor N",
             input = """
         |3 3 0 0 2 0
         |0 0 0
@@ -35,7 +35,7 @@ class Task4_Test(val runner: () -> Unit) {
         )
 
         test(
-            name = "3x3 neighbor",
+            name = "3x3 neighbor E",
             input = """
         |3 3 0 0 0 1
         |0 0 0
@@ -46,7 +46,7 @@ class Task4_Test(val runner: () -> Unit) {
         )
 
         test(
-            name = "3x3 neighbor",
+            name = "3x3 neighbor W",
             input = """
         |3 3 0 0 0 2
         |0 0 0

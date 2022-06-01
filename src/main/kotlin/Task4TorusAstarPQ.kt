@@ -6,91 +6,107 @@ class Task4TorusAstarPQ(
     val sizex: Int,
     starty: Int,
     startx: Int,
-    finishy: Int,
-    finishx: Int
+    val finishy: Int,
+    val finishx: Int
 ) {
-    data class Pt(val x: Int, val y: Int)
+    fun packXY(x: Int, y: Int) = x.shl(16).or(y)
+    val start = packXY(startx, starty)
+    val finish = packXY(finishx, finishy)
 
-    val linSize = sizex * sizey
-    val start = Pt(startx, starty)
-    val finish = Pt(finishx, finishy)
+    fun distCoordOrd(c1: Int, c2: Int, m: Int) = kotlin.math.min(c2 - c1, c1 + m - c2)
+    fun distCoord(c1: Int, c2: Int, m: Int) = if (c1 < c2) distCoordOrd(c1, c2, m) else distCoordOrd(c2, c1, m)
+    fun dist(x1: Int, y1: Int, x2: Int, y2: Int) = distCoord(x1, x2, sizex) + distCoord(y1, y2, sizey)
 
-    fun off(pt: Pt) = pt.y * sizex + pt.x
+    val que = PriorityQueue<Long>()
 
-    fun distCoord(c1: Int, c2: Int, modulo: Int): Int {
-        val d = kotlin.math.abs(c1 - c2)
-        return Integer.min(d, modulo - d)
+    fun pushNode(pos: Int) {
+        val f = getF(pos).toLong().shl(32)
+        que.add(f or pos.toLong())
     }
 
-    fun dist(p1: Pt, p2: Pt) = distCoord(p1.x, p2.x, sizex) + distCoord(p1.y, p2.y, sizey)
-
-    val curG = IntArray(linSize) { INF }
-    val curF = IntArray(linSize) { 0 }
-    val curPrev = CharArray(linSize) { ' ' }
-    val que = TreeMap<Int, LinkedList<Pt>>()
-
-    fun pushNode(pt: Pt) {
-        val f = curF[off(pt)]
-        if (!que.containsKey(f))
-            que[f] = LinkedList<Pt>()
-        que[f]!!.addFirst(pt)
-    }
-
-    fun popNode(): Pt? {
-        while (true) {
-            val e = que.firstEntry() ?: return null
-            if (e.value.isEmpty()) {
-                que.remove(e.key)
-                continue
-            }
-            val ret = e.value.removeFirst()
-            if (curF[off(ret)] != e.key)
-                continue
-            return ret
+    fun popNode(): Int {
+        while (!que.isEmpty()) {
+            val long = que.remove()
+            val pos = long.and(0xFFFFFFFFL).toInt()
+            val f = long.ushr(32).toInt()
+            if (getF(pos) == f)
+                return pos
         }
+        return -1
     }
 
-    fun wrap(c: Int, mod: Int) = (c + mod) % mod
-    fun step(dir: Char, pos: Pt) =
+    val dirName = listOf('E', 'S', 'N', 'W')
+    val maxX = (sizex - 1).shl(16)
+    val maxY = sizey - 1
+    fun step(dir: Int, pos: Int): Int =
         when (dir) {
-            'W' -> Pt(wrap(pos.x - 1, sizex), pos.y)
-            'E' -> Pt(wrap(pos.x + 1, sizex), pos.y)
-            'N' -> Pt(pos.x, wrap(pos.y - 1, sizey))
-            'S' -> Pt(pos.x, wrap(pos.y + 1, sizey))
+            // 0=E, x++
+            0 -> if (pos < maxX) pos + 0x10000 else pos.and(0xFFFF)
+            // 2=W, x--
+            3 -> if (pos >= 0x10000) pos - 0x10000 else pos + maxX
+            // 1=S, y++
+            1 -> if (posy(pos) == maxY) pos - maxY else pos + 1
+            // 3=N, y--
+            2 -> if (posy(pos) != 0) pos - 1 else pos + maxY
             else -> TODO()
         }
 
-    fun backTrack(pos: Pt): String {
-        val revDir = mapOf('N' to 'S', 'S' to 'N', 'E' to 'W', 'W' to 'E')
-        var ret = ""
+    fun backTrack(pos: Int): String {
+        val sb = StringBuilder("")
         var cur = pos
         while (cur != start) {
-            val dir = curPrev[off(cur)]
-            ret += dir
-            cur = step(revDir[dir]!!, cur)
+            val dir = getDir(cur)
+            sb.append(dirName[dir])
+            cur = step(3 - dir /* reverse dir */, cur)
         }
-        return ret.reversed()
+        return sb.reversed().toString()
     }
+
+    val data = Array(sizex) { IntArray(sizey * 3) { -1 } }
+    // node: 8 bytes
+    //  g:       Int
+    //  h:       Short
+    //  prevdir: Byte
+    fun posx(pos: Int) = pos.ushr(16)
+    fun posy(pos: Int) = pos.and(0xFFFF)
+
+    fun setG(pos: Int, g: Int) { data[posx(pos)][posy(pos) * 3] = g }
+    fun getG(pos: Int)         = data[posx(pos)][posy(pos) * 3]
+
+    fun setDir(pos: Int, dir: Int) { data[posx(pos)][posy(pos) * 3 + 2] = dir }
+    fun getDir(pos: Int) = data[posx(pos)][posy(pos) * 3 + 2]
+
+    fun getH(pos: Int): Int {
+        val x = posx(pos)
+        val y = posy(pos)
+        val yi = y * 3 + 1
+        var h = data[x][yi]
+        if (h == -1) {
+            h = dist(x, y, finishx, finishy)
+            data[x][yi] = h
+        }
+        return h
+    }
+
+    fun getF(pos: Int): Int = getG(pos) + getH(pos)
 
     fun findPath(): String {
         if (start == finish)
             return ""
-        curG[off(start)] = 0
-        curF[off(start)] = dist(start, finish)
+        setG(start, 0)
         pushNode(start)
         while (true) {
-            val pos = popNode() ?: return "-1"
-            val off = off(pos)
-            val g2 = curG[off] + 1
-            for (dir in listOf('E', 'S', 'W', 'N')) {
+            val pos = popNode()
+            if (pos == -1)
+                return "-1"
+            val g2 = getG(pos)
+            for (dir in 0..3) {
                 val pos2 = step(dir, pos)
-                val off2 = off(pos2)
-                val g2old = curG[off2]
-                if (g2 >= g2old)
+                val g2old = getG(pos2)
+                if (g2old != -1 && g2 >= g2old)
                     continue
-                curG[off2] = g2
-                curF[off2] = dist(pos2, finish) + g2
-                curPrev[off2] = dir
+                setG(pos2, g2)
+                setDir(pos2, dir)
                 if (pos2 == finish)
                     return backTrack(pos2)
                 pushNode(pos2)
@@ -99,16 +115,18 @@ class Task4TorusAstarPQ(
     }
 
     companion object {
-        const val INF = Int.MAX_VALUE
         fun run() {
             val s = Scanner(File("input.txt"))
-            val t = Task4TorusAstar(s.nextInt(), s.nextInt(), s.nextInt(), s.nextInt(), s.nextInt(), s.nextInt())
-            for (i in 0 until t.linSize) {
-                if (s.nextInt() == 1)
-                    t.curG[i] = 0
+            val t = Task4TorusAstarPQ(s.nextInt(), s.nextInt(), s.nextInt(), s.nextInt(), s.nextInt(), s.nextInt())
+            for (y in 0 until t.sizey) {
+                for (x in 0 until t.sizex) {
+                    if (s.nextInt() == 1)
+                        t.setG(t.packXY(x, y), 0)
+                }
             }
             val res = t.findPath()
             File("output.txt").writeText(res)
+            // println(res)
         }
     }
 }
