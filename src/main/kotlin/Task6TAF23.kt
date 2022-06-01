@@ -1,6 +1,9 @@
 import java.io.File
 import java.io.RandomAccessFile
+import java.lang.Integer.min
 import java.lang.RuntimeException
+import java.nio.ByteBuffer
+import java.nio.ByteOrder
 import java.util.*
 
 class Task6TAF23 {
@@ -10,14 +13,15 @@ class Task6TAF23 {
         val len = dev.length().toInt()
         val mask = BitSet(len)
         var start = 0
-        var bytesCount = 0
 
-        // read single int
+        // read single int, allow short read
         fun readInt(off: Int): Int {
-            if (off + 4 > len)
-                throwBadBuffer()
+            if (off >= len)
+                return 0 // throwBadBuffer()
             dev.seek(off.toLong())
-            return Integer.reverseBytes(dev.readInt())
+            val bytes = ByteArray(4)
+            dev.read(bytes, 0, min(len - off, 4))
+            return ByteBuffer.wrap(bytes).order(ByteOrder.LITTLE_ENDIAN).int
         }
 
         while (true) {
@@ -25,16 +29,15 @@ class Task6TAF23 {
             if (size < 0)
                 throwBadBuffer()
             val next = readInt(start + size + 4)
-            val end = start + size + 8
+            val end = min(start + size + 8, len)
             if (!mask.get(start, end).isEmpty)
                 throwBadBuffer()
             mask.set(start, end)
-            bytesCount += end - start
             start = next
             if (next == 0)
                 break
         }
-        if (bytesCount != len)
+        if (mask.cardinality() != len)
             throw RuntimeException("data loss")
     }
 
@@ -42,7 +45,7 @@ class Task6TAF23 {
 
     companion object {
         fun run() {
-            val device = File("input.txt").readLines().first().trim()
+            val device = File("input.txt").readLines().first()
             var msg = "OK"
             try {
                 Task6TAF23().checkFS(device)
