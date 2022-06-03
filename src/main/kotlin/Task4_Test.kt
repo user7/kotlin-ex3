@@ -1,8 +1,8 @@
 class Task4_Test(val runner: () -> Unit) {
 
-    fun testAll() {
+    fun testAll(times: Int = 1) {
         val start = System.currentTimeMillis()
-        testAllAux()
+        repeat(times) { testAllAux() }
         val time = (System.currentTimeMillis() - start) / 1000f
         println("done, total time: $time")
     }
@@ -174,6 +174,7 @@ class Task4_Test(val runner: () -> Unit) {
 
     companion object {
         fun run(runner: () -> Unit) {
+            readLine()
             Task4_Test(runner).testAll()
         }
     }
