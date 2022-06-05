@@ -1,0 +1,4 @@
+test=${1-Task4TorusPath_TestKt}
+echo test=$test
+/Users/user/Library/Java/JavaVirtualMachines/openjdk-18.0.1.1/Contents/Home/bin/java -javaagent:'/Applications/IntelliJ IDEA CE.app/Contents/lib/idea_rt.jar=65373:/Applications/IntelliJ IDEA CE.app/Contents/bin' -Dfile.encoding=UTF-8 -classpath '/Users/user/p/kotlin-ex3/out/production/kotlin-ex3:/Applications/IntelliJ IDEA CE.app/Contents/plugins/Kotlin/kotlinc/lib/kotlin-stdlib.jar:/Applications/IntelliJ IDEA CE.app/Contents/plugins/Kotlin/kotlinc/lib/kotlin-reflect.jar:/Applications/IntelliJ IDEA CE.app/Contents/plugins/Kotlin/kotlinc/lib/kotlin-test.jar' "$test"
+
